@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Cedar Lake Surf Zone Geo Fence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #f0f6ff;
+            --surface:  #ffffff;
+            --border:   #d0e4f7;
+            --blue:     #1a6fc4;
+            --blue-lt:  #e8f2fc;
+            --blue-mid: #4a9de0;
+            --text:     #1a2b3c;
+            --muted:    #7a9bb5;
+            --green:    #0d9e6e;
+            --green-lt: #e6f7f2;
+            --red:      #d93025;
+            --red-lt:   #fdecea;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ── Title ── */
+        .title {
+            text-align: center;
+            padding-bottom: 4px;
+        }
+        .title h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--blue);
+            letter-spacing: -0.3px;
+            line-height: 1.3;
+        }
+        .title p {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Divider ── */
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── Zone card — hero ── */
+        .zone-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+        .zone-card.good {
+            border-color: var(--green);
+            background: var(--green-lt);
+        }
+        .zone-card.bad {
+            border-color: var(--red);
+            background: var(--red-lt);
+            animation: softpulse 1.4s ease infinite;
+        }
+        @keyframes softpulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(217,48,37,0.15); }
+            50%      { box-shadow: 0 0 0 8px rgba(217,48,37,0); }
+        }
+        .zone-label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .zone-status {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--muted);
+            transition: color 0.3s;
+            letter-spacing: -0.5px;
+        }
+        .zone-card.good .zone-status { color: var(--green); }
+        .zone-card.bad  .zone-status { color: var(--red); }
+        .zone-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* ── Server row ── */
+        .server-row {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .s-left { display:flex; align-items:center; gap:10px; }
+        .sdot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+        .sdot.on  { background: var(--green); animation: pulse 2s infinite; }
+        .sdot.off { background: var(--red); }
+        @keyframes pulse {
+            0%,100% { opacity:1; } 50% { opacity:0.4; }
+        }
+        .s-text { font-size: 12px; color: var(--muted); }
+        .s-text strong { display:block; font-size:13px; color:var(--text); font-weight:500; margin-bottom:1px; }
+        .s-btn {
+            padding: 6px 13px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            background: var(--blue-lt);
+            color: var(--blue);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            flex-shrink: 0;
+            flex: unset;
+            transition: background 0.2s;
+        }
+        .s-btn:hover { background: #d5e8f8; }
+
+        /* ── GPS pill ── */
+        .gps-pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 8px 18px;
+            background: var(--blue-lt);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--blue);
+            width: fit-content;
+            margin: 0 auto;
+            letter-spacing: 0.3px;
+        }
+        .gdot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--muted);
+            transition: background 0.3s;
+        }
+        .gdot.live  { background: var(--green); animation: pulse 2s infinite; }
+        .gdot.error { background: var(--red); }
+
+        /* ── Coord cards ── */
+        .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .coord-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: border-color 0.3s;
+        }
+        .coord-card.flash { border-color: var(--blue-mid); }
+        .c-label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .c-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--blue);
+        }
+        .c-val.dim { color: var(--border); }
+
+        /* ── Info row ── */
+        .info-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+        .i-label {
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 5px;
+        }
+        .i-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .i-val.dim { color: var(--border); }
+
+        /* ── Buttons ── */
+        .btn-row { display: flex; gap: 10px; }
+        button {
+            flex: 1;
+            padding: 13px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #startBtn {
+            background: var(--blue);
+            color: #fff;
+        }
+        #startBtn:hover { background: #155da0; transform: translateY(-1px); }
+        #startBtn:disabled {
+            background: var(--blue-lt);
+            color: var(--blue-mid);
+            border: 1px solid var(--border);
+            cursor: default; transform: none;
+        }
+        #stopBtn {
+            background: var(--surface);
+            color: var(--red);
+            border: 1px solid var(--border);
+            display: none;
+        }
+        #stopBtn:hover { background: var(--red-lt); }
+
+        /* ── Log ── */
+        .log-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-box::-webkit-scrollbar { width: 3px; }
+        .log-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+        .log-head {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .log-row {
+            font-size: 11px;
+            color: var(--muted);
+            padding: 5px 0;
+            border-bottom: 1px solid var(--bg);
+            display: grid;
+            grid-template-columns: 58px 1fr 52px;
+            gap: 6px;
+            align-items: center;
+        }
+        .log-row:last-child { border-bottom: none; }
+        .l-time { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--blue-mid); }
+        .l-coord { font-family:'JetBrains Mono',monospace; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .l-status { font-size:10px; text-align:right; font-weight:500; }
+        .l-status.ok   { color: var(--green); }
+        .l-status.warn { color: var(--red); }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- Title -->
+    <div class="title">
+        <h1>Big Cedar Lake Surf Zone Geo Fence</h1>
+        <p>Live GPS · 406ft Shore Rule · BlueJ Connected</p>
+    </div>
+
+    <hr>
+
+    <!-- Zone status -->
+    <div class="zone-card" id="zoneCard">
+        <div class="zone-label">Zone Status</div>
+        <div class="zone-status" id="zoneStatus">Waiting...</div>
+        <div class="zone-sub" id="zoneSub">Start tracking to check your zone</div>
+    </div>
+
+    <!-- BlueJ server -->
+    <div class="server-row">
+        <div class="s-left">
+            <div class="sdot off" id="sdot"></div>
+            <div class="s-text">
+                <strong>BlueJ Server</strong>
+                <span id="stext">Not connected — run LocationServer.java first</span>
+            </div>
+        </div>
+        <button class="s-btn" onclick="checkServer()">Check</button>
+    </div>
+
+    <!-- GPS status -->
+    <div class="gps-pill">
+        <div class="gdot" id="gdot"></div>
+        <span id="gtext">Waiting to start</span>
+    </div>
+
+    <!-- Coordinates -->
+    <div class="coord-grid">
+        <div class="coord-card" id="latCard">
+            <div class="c-label">Latitude</div>
+            <div class="c-val dim" id="latVal">---</div>
+        </div>
+        <div class="coord-card" id="lonCard">
+            <div class="c-label">Longitude</div>
+            <div class="c-val dim" id="lonVal">---</div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="info-row">
+        <div class="info-card">
+            <div class="i-label">Accuracy</div>
+            <div class="i-val dim" id="accVal">---</div>
+        </div>
+        <div class="info-card">
+            <div class="i-label">Altitude</div>
+            <div class="i-val dim" id="altVal">---</div>
+        </div>
+        <div class="info-card">
+            <div class="i-label">Sent</div>
+            <div class="i-val" id="sentVal">0</div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+        <button id="startBtn" onclick="startTracking()">▶ Start Tracking</button>
+        <button id="stopBtn"  onclick="stopTracking()">■ Stop</button>
+    </div>
+
+    <!-- Log -->
+    <div class="log-box">
+        <div class="log-head">Send Log</div>
+        <div id="logList">
+            <div class="log-row">
+                <span class="l-time">--:--:--</span>
+                <span class="l-coord">No data yet</span>
+                <span class="l-status">---</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">Sends to BlueJ on every GPS update · Port 8080</div>
+
+</div>
+
+<script>
+    const SERVER  = 'http://localhost:8080';
+    let watchId   = null;
+    let sentCount = 0;
+
+    // ── Warning sound — only plays when outside zone ──────────────────
+    function playWarning() {
+        const ctx  = new AudioContext();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.value = 220;
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.9);
+    }
+
+    // ── BlueJ check ───────────────────────────────────────────────────
+    async function checkServer() {
+        document.getElementById('stext').textContent = 'Checking...';
+        try {
+            const res = await fetch(SERVER + '/ping', { mode: 'cors' });
+            if (res.ok) {
+                document.getElementById('sdot').className = 'sdot on';
+                document.getElementById('stext').textContent = 'Connected · Ready to receive';
+            } else throw new Error();
+        } catch {
+            document.getElementById('sdot').className = 'sdot off';
+            document.getElementById('stext').textContent = 'Not found — run LocationServer.java first';
+        }
+    }
+
+    // ── Send to BlueJ, get true/false back ───────────────────────────
+    async function sendToBlueJ(lat, lon, acc, alt, ts) {
+        const payload = `${ts},${lat},${lon},${acc},${alt}`;
+        try {
+            const res = await fetch(SERVER + '/location', {
+                method: 'POST', mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload
+            });
+            if (res.ok) {
+                const answer = (await res.text()).trim();
+                sentCount++;
+                document.getElementById('sentVal').textContent = sentCount;
+                document.getElementById('sdot').className = 'sdot on';
+                document.getElementById('stext').textContent = 'Connected · Receiving';
+
+                const good = answer === 'true';
+                updateZone(good);
+                if (!good) playWarning();
+                return good;
+            }
+        } catch {
+            document.getElementById('sdot').className = 'sdot off';
+            document.getElementById('stext').textContent = 'Connection lost — is BlueJ running?';
+        }
+        return null;
+    }
+
+    // ── Zone card update ──────────────────────────────────────────────
+    function updateZone(good) {
+        const card   = document.getElementById('zoneCard');
+        const status = document.getElementById('zoneStatus');
+        const sub    = document.getElementById('zoneSub');
+        if (good) {
+            card.className   = 'zone-card good';
+            status.textContent = '✓ Acceptable Zone';
+            sub.textContent    = 'You are 406ft or more from shore';
+        } else {
+            card.className   = 'zone-card bad';
+            status.textContent = '✗ Out of Zone';
+            sub.textContent    = 'Too close to shore or off the lake';
+        }
+    }
+
+    // ── GPS ───────────────────────────────────────────────────────────
+    function startTracking() {
+        if (!navigator.geolocation) { setGPS('Not supported', 'error'); return; }
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'block';
+        setGPS('Acquiring signal...', '');
+        checkServer();
+
+        watchId = navigator.geolocation.watchPosition(
+            onLocation, onError,
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
+        );
+    }
+
+    function stopTracking() {
+        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').style.display = 'none';
+        setGPS('Stopped', '');
+    }
+
+    async function onLocation(pos) {
+        const lat = pos.coords.latitude.toFixed(7);
+        const lon = pos.coords.longitude.toFixed(7);
+        const acc = pos.coords.accuracy ? Math.round(pos.coords.accuracy) + 'm' : 'N/A';
+        const alt = pos.coords.altitude ? Math.round(pos.coords.altitude) + 'm' : 'N/A';
+        const ts  = new Date().toISOString();
+
+        setCoord('latVal', 'latCard', lat);
+        setCoord('lonVal', 'lonCard', lon);
+        setText('accVal', acc);
+        setText('altVal', alt);
+        setGPS('Live · Tracking', 'live');
+
+        const result = await sendToBlueJ(lat, lon, acc, alt, ts);
+        addLog(ts, lat, lon, result);
+    }
+
+    function onError(err) {
+        const msg = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'GPS timed out' };
+        setGPS(msg[err.code] || 'Error', 'error');
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────
+    function setCoord(id, cardId, val) {
+        const el = document.getElementById(id);
+        el.textContent = val;
+        el.classList.remove('dim');
+        const card = document.getElementById(cardId);
+        card.classList.add('flash');
+        setTimeout(() => card.classList.remove('flash'), 600);
+    }
+
+    function setText(id, val) {
+        const el = document.getElementById(id);
+        el.textContent = val;
+        el.classList.remove('dim');
+    }
+
+    function setGPS(text, type) {
+        document.getElementById('gtext').textContent = text;
+        const dot = document.getElementById('gdot');
+        dot.className = 'gdot';
+        if (type === 'live')  dot.classList.add('live');
+        if (type === 'error') dot.classList.add('error');
+    }
+
+    function addLog(ts, lat, lon, result) {
+        const time    = ts.slice(11, 19);
+        const logList = document.getElementById('logList');
+
+        if (logList.children[0]?.querySelector('.l-coord')?.textContent === 'No data yet') {
+            logList.innerHTML = '';
+        }
+
+        const row = document.createElement('div');
+        row.className = 'log-row';
+
+        let statusHtml;
+        if (result === true)       statusHtml = '<span class="l-status ok">✓ Good</span>';
+        else if (result === false)  statusHtml = '<span class="l-status warn">✗ Bad</span>';
+        else                        statusHtml = '<span class="l-status">No BlueJ</span>';
+
+        row.innerHTML = `
+            <span class="l-time">${time}</span>
+            <span class="l-coord">${lat}, ${lon}</span>
+            ${statusHtml}
+        `;
+        logList.prepend(row);
+        while (logList.children.length > 40) logList.removeChild(logList.lastChild);
+    }
+
+    checkServer();
+</script>
+</body>
+</html>
