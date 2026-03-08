@@ -392,24 +392,40 @@
 </div>
 
 <script>
-    const SERVER  = 'http://localhost:8080';
+    const SERVER  = 'https://cedar-lake-server--27mtorinus.replit.app';
     let watchId   = null;
     let sentCount = 0;
 
     // ── Warning sound — only plays when outside zone ──────────────────
-    function playWarning() {
-        const ctx  = new AudioContext();
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sawtooth';
-        osc.frequency.value = 220;
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.9);
+    
+        let warningInterval = null;
+
+function startWarning() {
+    if (warningInterval) return; // already beeping
+    playBeep();
+    warningInterval = setInterval(playBeep, 1500); // beep every 1.5 seconds
+}
+
+function stopWarning() {
+    if (warningInterval) {
+        clearInterval(warningInterval);
+        warningInterval = null;
     }
+}
+
+function playBeep() {
+    const ctx  = new AudioContext();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+}
 
     // ── BlueJ check ───────────────────────────────────────────────────
     async function checkServer() {
@@ -444,8 +460,11 @@
 
                 const good = answer === 'true';
                 updateZone(good);
-                if (!good) playWarning();
-                return good;
+                if (!good) {
+    startWarning();
+} else {
+    stopWarning();
+}
             }
         } catch {
             document.getElementById('sdot').className = 'sdot off';
