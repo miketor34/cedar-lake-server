@@ -39,6 +39,7 @@
             gap: 16px;
         }
 
+        /* ── Title ── */
         .title {
             text-align: center;
             padding-bottom: 4px;
@@ -57,11 +58,13 @@
             letter-spacing: 0.5px;
         }
 
+        /* ── Divider ── */
         hr {
             border: none;
             border-top: 1px solid var(--border);
         }
 
+        /* ── Zone card — hero ── */
         .zone-card {
             background: var(--surface);
             border: 1.5px solid var(--border);
@@ -107,6 +110,7 @@
             font-weight: 400;
         }
 
+        /* ── Server row ── */
         .server-row {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -148,6 +152,7 @@
         }
         .s-btn:hover { background: #d5e8f8; }
 
+        /* ── GPS pill ── */
         .gps-pill {
             display: flex;
             align-items: center;
@@ -173,6 +178,7 @@
         .gdot.live  { background: var(--green); animation: pulse 2s infinite; }
         .gdot.error { background: var(--red); }
 
+        /* ── Coord cards ── */
         .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .coord-card {
             background: var(--surface);
@@ -198,6 +204,7 @@
         }
         .c-val.dim { color: var(--border); }
 
+        /* ── Info row ── */
         .info-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
         .info-card {
             background: var(--surface);
@@ -222,6 +229,7 @@
         }
         .i-val.dim { color: var(--border); }
 
+        /* ── Buttons ── */
         .btn-row { display: flex; gap: 10px; }
         button {
             flex: 1;
@@ -253,6 +261,7 @@
         }
         #stopBtn:hover { background: var(--red-lt); }
 
+        /* ── Log ── */
         .log-box {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -299,6 +308,7 @@
 <body>
 <div class="page">
 
+    <!-- Title -->
     <div class="title">
         <h1>Big Cedar Lake Surf Zone Geo Fence</h1>
         <p>Live GPS · 406ft Shore Rule · BlueJ Connected</p>
@@ -306,8 +316,283 @@
 
     <hr>
 
+    <!-- Zone status -->
     <div class="zone-card" id="zoneCard">
         <div class="zone-label">Zone Status</div>
         <div class="zone-status" id="zoneStatus">Waiting...</div>
         <div class="zone-sub" id="zoneSub">Start tracking to check your zone</div>
-    </di
+    </div>
+
+    <!-- BlueJ server -->
+    <div class="server-row">
+        <div class="s-left">
+            <div class="sdot off" id="sdot"></div>
+            <div class="s-text">
+                <strong>BlueJ Server</strong>
+                <span id="stext">Not connected — run LocationServer.java first</span>
+            </div>
+        </div>
+        <button class="s-btn" onclick="checkServer()">Check</button>
+    </div>
+
+    <!-- GPS status -->
+    <div class="gps-pill">
+        <div class="gdot" id="gdot"></div>
+        <span id="gtext">Waiting to start</span>
+    </div>
+
+    <!-- Coordinates -->
+    <div class="coord-grid">
+        <div class="coord-card" id="latCard">
+            <div class="c-label">Latitude</div>
+            <div class="c-val dim" id="latVal">---</div>
+        </div>
+        <div class="coord-card" id="lonCard">
+            <div class="c-label">Longitude</div>
+            <div class="c-val dim" id="lonVal">---</div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="info-row">
+        <div class="info-card">
+            <div class="i-label">Accuracy</div>
+            <div class="i-val dim" id="accVal">---</div>
+        </div>
+        <div class="info-card">
+            <div class="i-label">Altitude</div>
+            <div class="i-val dim" id="altVal">---</div>
+        </div>
+        <div class="info-card">
+            <div class="i-label">Sent</div>
+            <div class="i-val" id="sentVal">0</div>
+        </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+        <button id="startBtn" onclick="startTracking()">▶ Start Tracking</button>
+        <button id="stopBtn"  onclick="stopTracking()">■ Stop</button>
+    </div>
+
+    <!-- Log -->
+    <div class="log-box">
+        <div class="log-head">Send Log</div>
+        <div id="logList">
+            <div class="log-row">
+                <span class="l-time">--:--:--</span>
+                <span class="l-coord">No data yet</span>
+                <span class="l-status">---</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">Sends to BlueJ on every GPS update · Port 8080</div>
+
+</div>
+
+<script>
+    const SERVER  = 'https://cedar-lake-server--27mtorinus.replit.app';
+    let watchId   = null;
+    let sentCount = 0;
+
+    // ── Warning sound — only plays when outside zone ──────────────────
+    
+        // ── Audio — iOS safe ──────────────────────────────────────────────
+let warningInterval = null;
+let audioCtx = null;
+
+function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+}
+
+function startWarning() {
+    if (warningInterval) return;
+    playBeep();
+    warningInterval = setInterval(playBeep, 1500);
+}
+
+function stopWarning() {
+    if (warningInterval) {
+        clearInterval(warningInterval);
+        warningInterval = null;
+    }
+}
+
+function playBeep() {
+    const ctx  = getAudioCtx();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(1.0, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+}
+
+    // ── BlueJ check ───────────────────────────────────────────────────
+    async function checkServer() {
+        document.getElementById('stext').textContent = 'Checking...';
+        try {
+            const res = await fetch(SERVER + '/ping', { mode: 'cors' });
+            if (res.ok) {
+                document.getElementById('sdot').className = 'sdot on';
+                document.getElementById('stext').textContent = 'Connected · Ready to receive';
+            } else throw new Error();
+        } catch {
+            document.getElementById('sdot').className = 'sdot off';
+            document.getElementById('stext').textContent = 'Not found — run LocationServer.java first';
+        }
+    }
+
+    // ── Send to BlueJ, get true/false back ───────────────────────────
+    async function sendToBlueJ(lat, lon, acc, alt, ts) {
+        const payload = `${ts},${lat},${lon},${acc},${alt}`;
+        try {
+            const res = await fetch(SERVER + '/location', {
+                method: 'POST', mode: 'cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: payload
+            });
+            if (res.ok) {
+                const answer = (await res.text()).trim();
+                sentCount++;
+                document.getElementById('sentVal').textContent = sentCount;
+                document.getElementById('sdot').className = 'sdot on';
+                document.getElementById('stext').textContent = 'Connected · Receiving';
+
+                const good = answer === 'true';
+                updateZone(good);
+                if (!good) {
+    startWarning();
+} else {
+    stopWarning();
+}
+            }
+        } catch {
+            document.getElementById('sdot').className = 'sdot off';
+            document.getElementById('stext').textContent = 'Connection lost — is BlueJ running?';
+        }
+        return null;
+    }
+
+    // ── Zone card update ──────────────────────────────────────────────
+    function updateZone(good) {
+        const card   = document.getElementById('zoneCard');
+        const status = document.getElementById('zoneStatus');
+        const sub    = document.getElementById('zoneSub');
+        if (good) {
+            card.className   = 'zone-card good';
+            status.textContent = '✓ Acceptable Zone';
+            sub.textContent    = 'You are 406ft or more from shore';
+        } else {
+            card.className   = 'zone-card bad';
+            status.textContent = '✗ Out of Zone';
+            sub.textContent    = 'Too close to shore or off the lake';
+        }
+    }
+
+    // ── GPS ───────────────────────────────────────────────────────────
+    function startTracking() {
+          getAudioCtx();
+        if (!navigator.geolocation) { setGPS('Not supported', 'error'); return; }
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('stopBtn').style.display = 'block';
+        setGPS('Acquiring signal...', '');
+        checkServer();
+
+        watchId = navigator.geolocation.watchPosition(
+            onLocation, onError,
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
+        );
+    }
+
+    function stopTracking() {
+        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').style.display = 'none';
+        setGPS('Stopped', '');
+    }
+
+    async function onLocation(pos) {
+        const lat = pos.coords.latitude.toFixed(7);
+        const lon = pos.coords.longitude.toFixed(7);
+        const acc = pos.coords.accuracy ? Math.round(pos.coords.accuracy) + 'm' : 'N/A';
+        const alt = pos.coords.altitude ? Math.round(pos.coords.altitude) + 'm' : 'N/A';
+        const ts  = new Date().toISOString();
+
+        setCoord('latVal', 'latCard', lat);
+        setCoord('lonVal', 'lonCard', lon);
+        setText('accVal', acc);
+        setText('altVal', alt);
+        setGPS('Live · Tracking', 'live');
+
+        const result = await sendToBlueJ(lat, lon, acc, alt, ts);
+        addLog(ts, lat, lon, result);
+    }
+
+    function onError(err) {
+        const msg = { 1: 'Permission denied', 2: 'Position unavailable', 3: 'GPS timed out' };
+        setGPS(msg[err.code] || 'Error', 'error');
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    // ── UI helpers ────────────────────────────────────────────────────
+    function setCoord(id, cardId, val) {
+        const el = document.getElementById(id);
+        el.textContent = val;
+        el.classList.remove('dim');
+        const card = document.getElementById(cardId);
+        card.classList.add('flash');
+        setTimeout(() => card.classList.remove('flash'), 600);
+    }
+
+    function setText(id, val) {
+        const el = document.getElementById(id);
+        el.textContent = val;
+        el.classList.remove('dim');
+    }
+
+    function setGPS(text, type) {
+        document.getElementById('gtext').textContent = text;
+        const dot = document.getElementById('gdot');
+        dot.className = 'gdot';
+        if (type === 'live')  dot.classList.add('live');
+        if (type === 'error') dot.classList.add('error');
+    }
+
+    function addLog(ts, lat, lon, result) {
+        const time    = ts.slice(11, 19);
+        const logList = document.getElementById('logList');
+
+        if (logList.children[0]?.querySelector('.l-coord')?.textContent === 'No data yet') {
+            logList.innerHTML = '';
+        }
+
+        const row = document.createElement('div');
+        row.className = 'log-row';
+
+        let statusHtml;
+        if (result === true)       statusHtml = '<span class="l-status ok">✓ Good</span>';
+        else if (result === false)  statusHtml = '<span class="l-status warn">✗ Bad</span>';
+        else                        statusHtml = '<span class="l-status">No BlueJ</span>';
+
+        row.innerHTML = `
+            <span class="l-time">${time}</span>
+            <span class="l-coord">${lat}, ${lon}</span>
+            ${statusHtml}
+        `;
+        logList.prepend(row);
+        while (logList.children.length > 40) logList.removeChild(logList.lastChild);
+    }
+
+    checkServer();
+</script>
+</body>
+</html>
