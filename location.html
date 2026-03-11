@@ -345,14 +345,15 @@
         const card   = document.getElementById('zoneCard');
         const status = document.getElementById('zoneStatus');
         const sub    = document.getElementById('zoneSub');
+        const isSubdivision = selectedLake === 'columbia_reserve' || selectedLake === 'diercks_hall';
         if (good) {
             card.className     = 'zone-card good';
             status.textContent = '✓ Acceptable Zone';
-            sub.textContent    = 'You are 406ft or more from shore';
+            sub.textContent    = isSubdivision ? 'You are within the zone' : 'You are 406ft or more from shore';
         } else {
             card.className     = 'zone-card bad';
             status.textContent = '✗ Out of Zone';
-            sub.textContent    = 'Too close to shore or off the lake';
+            sub.textContent    = isSubdivision ? 'You are outside the zone' : 'Too close to shore or off the lake';
         }
     }
 
@@ -392,7 +393,16 @@
 
         initMap(parseFloat(lat), parseFloat(lon));
 
-        const result = await sendToServer(lat, lon, acc, alt, ts);
+        let result;
+        if (selectedLake === 'columbia_reserve') {
+            result = true;
+            updateZone(true);
+            stopWarning();
+            sentCount++;
+            document.getElementById('sentVal').textContent = sentCount;
+        } else {
+            result = await sendToServer(lat, lon, acc, alt, ts);
+        }
         addLog(ts, lat, lon, result);
     }
 
