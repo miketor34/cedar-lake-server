@@ -43,16 +43,21 @@ public class LocationServer {
             locationLog.add(body);
             System.out.println("[" + locationLog.size() + "] Received: " + body);
 
-            // Parse lat/lon, check the zone, send true/false back to browser
+            // Parse lat/lon/lake, check the zone, send true/false back to browser
             String response = "false";
             String[] parts = body.split(",");
             if (parts.length >= 3) {
                 try {
                     double lat = Double.parseDouble(parts[1]);
                     double lon = Double.parseDouble(parts[2]);
-                    boolean acceptable = LocationAnalyzer.getResult(lat, lon);
+
+                    // Get lake key from part 6, default to big_cedar
+                    String lakeKey = parts.length >= 6 ? parts[5].trim() : "big_cedar";
+                    String filename = lakeKey + "_surf_zones.csv";
+
+                    boolean acceptable = LocationAnalyzer.getResult(lat, lon, filename);
                     response = String.valueOf(acceptable);
-                    System.out.println("  Zone check: " + response);
+                    System.out.println("  Lake: " + lakeKey + " | Zone check: " + response);
                 } catch (Exception e) {
                     System.out.println("  Error parsing coordinates: " + e.getMessage());
                 }
