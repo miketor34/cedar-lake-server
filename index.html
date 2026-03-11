@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surf Zone Geo Fence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --navy:   #0a1628;
+            --blue:   #1a6fc4;
+            --cyan:   #00c2e0;
+            --water:  #0d4f8c;
+            --foam:   #e8f6ff;
+            --white:  #ffffff;
+            --muted:  #7a9bb5;
+            --green:  #0d9e6e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--navy);
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 24px;
+            overflow: hidden;
+        }
+
+        /* animated water background */
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 110%, #0d4f8c88 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 20% 80%, #00c2e022 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 80% 70%, #1a6fc422 0%, transparent 50%);
+            animation: waterShift 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes waterShift {
+            from { opacity: 0.8; transform: scale(1); }
+            to   { opacity: 1;   transform: scale(1.05); }
+        }
+
+        /* wave SVG at bottom of hero */
+        .wave {
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+
+        .wave svg { display: block; width: 100%; height: 80px; }
+
+        .hero-content { position: relative; z-index: 2; max-width: 700px; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0,194,224,0.12);
+            border: 1px solid rgba(0,194,224,0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 28px;
+            animation: fadeUp 0.6s ease both;
+        }
+
+        .badge-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--cyan);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(42px, 8vw, 80px);
+            font-weight: 800;
+            line-height: 1.0;
+            letter-spacing: -2px;
+            margin-bottom: 8px;
+            animation: fadeUp 0.6s 0.1s ease both;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: clamp(15px, 2.5vw, 19px);
+            color: var(--muted);
+            font-weight: 300;
+            margin: 20px 0 40px;
+            line-height: 1.6;
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+
+        .cta-row {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeUp 0.6s 0.3s ease both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            color: var(--white);
+            text-decoration: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 100px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 8px 32px rgba(26,111,196,0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(26,111,196,0.6);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--white);
+            text-decoration: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 400;
+            padding: 16px 28px;
+            border-radius: 100px;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── PHONE MOCKUP ── */
+        .mockup-section {
+            background: #0d1f3a;
+            padding: 80px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .mockup-wrap {
+            position: relative;
+            width: 260px;
+            flex-shrink: 0;
+        }
+
+        .phone {
+            width: 260px;
+            background: #111827;
+            border-radius: 44px;
+            border: 6px solid #2a3a50;
+            box-shadow:
+                0 0 0 1px #1a2a40,
+                0 40px 80px rgba(0,0,0,0.6),
+                inset 0 0 0 1px #0a1628;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 100px; height: 28px;
+            background: #111827;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        .phone-screen {
+            background: #f0f6ff;
+            padding: 44px 14px 20px;
+            min-height: 500px;
+        }
+
+        .ps-title {
+            text-align: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a6fc4;
+            margin-bottom: 2px;
+        }
+        .ps-sub { text-align:center; font-size:8px; color:#7a9bb5; margin-bottom:10px; }
+
+        .ps-select {
+            background: #e8f2fc;
+            border: 1px solid #d0e4f7;
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 9px;
+            color: #1a2b3c;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ps-zone {
+            background: #e6f7f2;
+            border: 1.5px solid #0d9e6e;
+            border-radius: 10px;
+            padding: 14px 10px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .ps-zone-label { font-size: 7px; letter-spacing: 1px; color: #7a9bb5; text-transform: uppercase; margin-bottom: 4px; }
+        .ps-zone-status { font-size: 14px; font-weight: 700; color: #0d9e6e; }
+        .ps-zone-sub { font-size: 7px; color: #7a9bb5; margin-top: 2px; }
+
+        .ps-map {
+            background: linear-gradient(135deg, #c8dfc8, #b8cfb8);
+            border-radius: 8px;
+            height: 100px;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ps-map::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 14px; height: 14px;
+            background: #1a6fc4;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .ps-coords {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .ps-coord {
+            background: white;
+            border: 1px solid #d0e4f7;
+            border-radius: 8px;
+            padding: 6px 8px;
+        }
+
+        .ps-coord-label { font-size: 6px; letter-spacing: 1px; color: #7a9bb5; text-transform: uppercase; }
+        .ps-coord-val { font-size: 9px; font-weight: 600; color: #1a6fc4; font-family: monospace; }
+
+        .ps-btn {
+            background: #1a6fc4;
+            color: white;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        /* ── FEATURES ── */
+        .features {
+            background: #0d1f3a;
+            padding: 0 24px 100px;
+        }
+
+        .section-label {
+            text-align: center;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--cyan);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -1px;
+            margin-bottom: 60px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 32px 28px;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(0,194,224,0.3);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        /* ── LAKES ── */
+        .lakes {
+            background: var(--navy);
+            padding: 100px 24px;
+        }
+
+        .lakes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .lake-chip {
+            background: rgba(26,111,196,0.1);
+            border: 1px solid rgba(26,111,196,0.25);
+            border-radius: 14px;
+            padding: 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .lake-chip:hover {
+            background: rgba(26,111,196,0.2);
+            border-color: rgba(0,194,224,0.4);
+        }
+
+        .lake-chip-icon { font-size: 22px; }
+
+        .lake-chip-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .lake-chip-sub { font-size: 11px; color: var(--muted); }
+
+        /* ── HOW IT WORKS ── */
+        .how {
+            background: #0d1f3a;
+            padding: 100px 24px;
+        }
+
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            gap: 24px;
+            position: relative;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 48px;
+            bottom: -16px;
+            width: 2px;
+            background: linear-gradient(to bottom, rgba(0,194,224,0.4), rgba(0,194,224,0.05));
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-bottom: 32px;
+        }
+
+        .step-content { padding-top: 8px; }
+        .step-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+        .step-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--navy);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding: 40px 24px;
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .footer-logo span {
+            background: linear-gradient(135deg, var(--cyan), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        footer p { font-size: 12px; color: var(--muted); }
+        footer a { color: var(--cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="badge">
+            <div class="badge-dot"></div>
+            Live GPS Tracking
+        </div>
+
+        <h1>Surf Zone<br><span>Geo Fence</span></h1>
+
+        <p class="subtitle">
+            Real-time GPS zone checker for Wisconsin lakes.<br>
+            Know instantly if you're 406ft from shore — or not.
+        </p>
+
+        <div class="cta-row">
+            <a href="location.html" class="btn-primary">
+                ▶ Launch App
+            </a>
+            <a href="https://github.com/miketor34/cedar-lake-server" class="btn-secondary" target="_blank">
+                ⭐ View on GitHub
+            </a>
+        </div>
+    </div>
+
+    <div class="wave">
+        <svg viewBox="0 0 1200 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z" fill="#0d1f3a"/>
+        </svg>
+    </div>
+</section>
+
+<!-- PHONE MOCKUP + FEATURES -->
+<section class="mockup-section">
+    <div>
+        <p class="section-label">The App</p>
+        <h2 class="section-title">Clean. Fast. Accurate.</h2>
+    </div>
+
+    <div class="mockup-wrap">
+        <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+                <div class="ps-title">Surf Zone Geo Fence</div>
+                <div class="ps-sub">Live GPS · 406ft Shore Rule</div>
+                <div class="ps-select">
+                    <span>Big Cedar Lake</span>
+                    <span style="color:#7a9bb5">▾</span>
+                </div>
+                <div class="ps-zone">
+                    <div class="ps-zone-label">Zone Status</div>
+                    <div class="ps-zone-status">✓ Acceptable Zone</div>
+                    <div class="ps-zone-sub">You are 406ft or more from shore</div>
+                </div>
+                <div class="ps-map"></div>
+                <div class="ps-coords">
+                    <div class="ps-coord">
+                        <div class="ps-coord-label">Latitude</div>
+                        <div class="ps-coord-val">43.3875</div>
+                    </div>
+                    <div class="ps-coord">
+                        <div class="ps-coord-label">Longitude</div>
+                        <div class="ps-coord-val">-88.2601</div>
+                    </div>
+                </div>
+                <div class="ps-btn">■ Stop Tracking</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+    <p class="section-label">Features</p>
+    <h2 class="section-title">Everything you need<br>on the water</h2>
+
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">📍</div>
+            <div class="feature-title">Live GPS Tracking</div>
+            <div class="feature-desc">Continuously monitors your position using your device's high-accuracy GPS and updates your zone status in real time.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔔</div>
+            <div class="feature-title">Audio Warning</div>
+            <div class="feature-desc">Repeating beep alert triggers the moment you leave the acceptable zone, so you know without looking at the screen.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🗺️</div>
+            <div class="feature-title">Live Map</div>
+            <div class="feature-desc">OpenStreetMap integration shows your exact position on a real map as you move across the lake.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🏊</div>
+            <div class="feature-title">Multiple Locations</div>
+            <div class="feature-desc">Switch between Big Cedar Lake, Lake Geneva, Lake Mendota, Elkhart Lake, Lake Winnebago, MSOE, and Columbia Reserve.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📏</div>
+            <div class="feature-title">406ft Shore Rule</div>
+            <div class="feature-desc">Enforces the standard 406-foot minimum distance from any shoreline for acceptable surf zone classification.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <div class="feature-title">Works on Any Device</div>
+            <div class="feature-desc">Runs in any browser on iPhone, Android, or desktop. No app download required — just open and go.</div>
+        </div>
+    </div>
+</section>
+
+<!-- LAKES -->
+<section class="lakes">
+    <p class="section-label">Supported Locations</p>
+    <h2 class="section-title">7 locations<br>and counting</h2>
+
+    <div class="lakes-grid">
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🌊</div>
+            <div>
+                <div class="lake-chip-name">Big Cedar Lake</div>
+                <div class="lake-chip-sub">Washington County, WI</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🌊</div>
+            <div>
+                <div class="lake-chip-name">Lake Geneva</div>
+                <div class="lake-chip-sub">Walworth County, WI</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🌊</div>
+            <div>
+                <div class="lake-chip-name">Lake Mendota</div>
+                <div class="lake-chip-sub">Dane County, WI</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🌊</div>
+            <div>
+                <div class="lake-chip-name">Elkhart Lake</div>
+                <div class="lake-chip-sub">Sheboygan County, WI</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🌊</div>
+            <div>
+                <div class="lake-chip-name">Lake Winnebago</div>
+                <div class="lake-chip-sub">Winnebago County, WI</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🏢</div>
+            <div>
+                <div class="lake-chip-name">Diercks Hall</div>
+                <div class="lake-chip-sub">MSOE, Milwaukee</div>
+            </div>
+        </div>
+        <div class="lake-chip">
+            <div class="lake-chip-icon">🏘️</div>
+            <div>
+                <div class="lake-chip-name">Columbia Reserve</div>
+                <div class="lake-chip-sub">Mequon, WI</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+    <p class="section-label">How It Works</p>
+    <h2 class="section-title">Simple as<br>three steps</h2>
+
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+                <div class="step-title">Select your location</div>
+                <div class="step-desc">Pick the lake or zone you're heading to from the dropdown menu.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+                <div class="step-title">Hit Start Tracking</div>
+                <div class="step-desc">The app activates your GPS and begins sending your position to the server every few seconds.</div>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+                <div class="step-title">Stay in the green</div>
+                <div class="step-desc">The zone card turns green when you're in the acceptable surf zone. A beep alarm fires if you drift too close to shore.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-logo">Surf Zone <span>Geo Fence</span></div>
+    <p>Built with Java · Leaflet.js · GitHub Pages &nbsp;·&nbsp; <a href="location.html">Launch App →</a></p>
+</footer>
+
+</body>
+</html>
