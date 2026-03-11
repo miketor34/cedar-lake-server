@@ -3,122 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Big Cedar Lake Surf Zone Geo Fence</title>
+    <title>Surf Zone Geo Fence</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         :root {
-            --bg:       #f0f6ff;
-            --surface:  #ffffff;
-            --border:   #d0e4f7;
-            --blue:     #1a6fc4;
-            --blue-lt:  #e8f2fc;
-            --blue-mid: #4a9de0;
-            --text:     #1a2b3c;
-            --muted:    #7a9bb5;
-            --green:    #0d9e6e;
-            --green-lt: #e6f7f2;
-            --red:      #d93025;
-            --red-lt:   #fdecea;
+            --bg:#f0f6ff; --surface:#ffffff; --border:#d0e4f7; --blue:#1a6fc4;
+            --blue-lt:#e8f2fc; --blue-mid:#4a9de0; --text:#1a2b3c; --muted:#7a9bb5;
+            --green:#0d9e6e; --green-lt:#e6f7f2; --red:#d93025; --red-lt:#fdecea;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .page { max-width: 420px; margin: 0 auto; padding: 40px 20px 60px; display: flex; flex-direction: column; gap: 16px; }
-        .title { text-align: center; padding-bottom: 4px; }
-        .title h1 { font-size: 18px; font-weight: 600; color: var(--blue); letter-spacing: -0.3px; line-height: 1.3; }
-        .title p { font-size: 11px; color: var(--muted); margin-top: 5px; letter-spacing: 0.5px; }
-        hr { border: none; border-top: 1px solid var(--border); }
-        .zone-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; padding: 24px 20px; text-align: center; transition: all 0.4s ease; }
-        .zone-card.good { border-color: var(--green); background: var(--green-lt); }
-        .zone-card.bad { border-color: var(--red); background: var(--red-lt); animation: softpulse 1.4s ease infinite; }
-        @keyframes softpulse { 0%,100% { box-shadow: 0 0 0 0 rgba(217,48,37,0.15); } 50% { box-shadow: 0 0 0 8px rgba(217,48,37,0); } }
-        .zone-label { font-size: 10px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-        .zone-status { font-size: 26px; font-weight: 600; color: var(--muted); transition: color 0.3s; letter-spacing: -0.5px; }
-        .zone-card.good .zone-status { color: var(--green); }
-        .zone-card.bad  .zone-status { color: var(--red); }
-        .zone-sub { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 400; }
-        .server-row { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+        .page { max-width:420px; margin:0 auto; padding:40px 20px 60px; display:flex; flex-direction:column; gap:16px; }
+        .title { text-align:center; padding-bottom:4px; }
+        .title h1 { font-size:18px; font-weight:600; color:var(--blue); letter-spacing:-0.3px; line-height:1.3; }
+        .title p { font-size:11px; color:var(--muted); margin-top:5px; letter-spacing:0.5px; }
+        hr { border:none; border-top:1px solid var(--border); }
+        /* Lake selector */
+        .lake-row { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; }
+        .lake-label { font-size:10px; font-weight:500; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+        #lakeSelect { width:100%; padding:10px 12px; font-family:'Inter',sans-serif; font-size:13px; font-weight:500; color:var(--text); background:var(--blue-lt); border:1px solid var(--border); border-radius:8px; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237a9bb5' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+        #lakeSelect:focus { outline:none; border-color:var(--blue); }
+        /* Zone card */
+        .zone-card { background:var(--surface); border:1.5px solid var(--border); border-radius:14px; padding:24px 20px; text-align:center; transition:all 0.4s ease; }
+        .zone-card.good { border-color:var(--green); background:var(--green-lt); }
+        .zone-card.bad { border-color:var(--red); background:var(--red-lt); animation:softpulse 1.4s ease infinite; }
+        @keyframes softpulse { 0%,100%{box-shadow:0 0 0 0 rgba(217,48,37,0.15);} 50%{box-shadow:0 0 0 8px rgba(217,48,37,0);} }
+        .zone-label { font-size:10px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+        .zone-status { font-size:26px; font-weight:600; color:var(--muted); transition:color 0.3s; letter-spacing:-0.5px; }
+        .zone-card.good .zone-status { color:var(--green); }
+        .zone-card.bad  .zone-status { color:var(--red); }
+        .zone-sub { font-size:12px; color:var(--muted); margin-top:6px; font-weight:400; }
+        /* Server row */
+        .server-row { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
         .s-left { display:flex; align-items:center; gap:10px; }
-        .sdot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; transition: all 0.3s; }
-        .sdot.on  { background: var(--green); animation: pulse 2s infinite; }
-        .sdot.off { background: var(--red); }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
-        .s-text { font-size: 12px; color: var(--muted); }
+        .sdot { width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0; transition:all 0.3s; }
+        .sdot.on  { background:var(--green); animation:pulse 2s infinite; }
+        .sdot.off { background:var(--red); }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+        .s-text { font-size:12px; color:var(--muted); }
         .s-text strong { display:block; font-size:13px; color:var(--text); font-weight:500; margin-bottom:1px; }
-        .s-btn { padding: 6px 13px; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 500; background: var(--blue-lt); color: var(--blue); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; flex-shrink: 0; flex: unset; transition: background 0.2s; }
-        .s-btn:hover { background: #d5e8f8; }
-        .gps-pill { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 18px; background: var(--blue-lt); border: 1px solid var(--border); border-radius: 100px; font-size: 11px; font-weight: 500; color: var(--blue); width: fit-content; margin: 0 auto; letter-spacing: 0.3px; }
-        .gdot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
-        .gdot.live  { background: var(--green); animation: pulse 2s infinite; }
-        .gdot.error { background: var(--red); }
-        #map { height: 300px; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
-        .coord-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .coord-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: border-color 0.3s; }
-        .coord-card.flash { border-color: var(--blue-mid); }
-        .c-label { font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-        .c-val { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; color: var(--blue); }
-        .c-val.dim { color: var(--border); }
-        .info-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 10px; text-align: center; }
-        .i-label { font-size: 9px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
-        .i-val { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text); }
-        .i-val.dim { color: var(--border); }
-        .btn-row { display: flex; gap: 10px; }
-        button { flex: 1; padding: 13px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-        #startBtn { background: var(--blue); color: #fff; }
-        #startBtn:hover { background: #155da0; transform: translateY(-1px); }
-        #startBtn:disabled { background: var(--blue-lt); color: var(--blue-mid); border: 1px solid var(--border); cursor: default; transform: none; }
-        #stopBtn { background: var(--surface); color: var(--red); border: 1px solid var(--border); display: none; }
-        #stopBtn:hover { background: var(--red-lt); }
-        .log-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; max-height: 200px; overflow-y: auto; }
-        .log-box::-webkit-scrollbar { width: 3px; }
-        .log-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-        .log-head { font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-        .log-row { font-size: 11px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid var(--bg); display: grid; grid-template-columns: 58px 1fr 52px; gap: 6px; align-items: center; }
-        .log-row:last-child { border-bottom: none; }
+        .s-btn { padding:6px 13px; font-family:'Inter',sans-serif; font-size:11px; font-weight:500; background:var(--blue-lt); color:var(--blue); border:1px solid var(--border); border-radius:8px; cursor:pointer; flex-shrink:0; flex:unset; transition:background 0.2s; }
+        .s-btn:hover { background:#d5e8f8; }
+        /* GPS pill */
+        .gps-pill { display:flex; align-items:center; justify-content:center; gap:7px; padding:8px 18px; background:var(--blue-lt); border:1px solid var(--border); border-radius:100px; font-size:11px; font-weight:500; color:var(--blue); width:fit-content; margin:0 auto; letter-spacing:0.3px; }
+        .gdot { width:7px; height:7px; border-radius:50%; background:var(--muted); transition:background 0.3s; }
+        .gdot.live  { background:var(--green); animation:pulse 2s infinite; }
+        .gdot.error { background:var(--red); }
+        /* Map */
+        #map { height:300px; border-radius:12px; border:1px solid var(--border); overflow:hidden; }
+        /* Coords */
+        .coord-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .coord-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; transition:border-color 0.3s; }
+        .coord-card.flash { border-color:var(--blue-mid); }
+        .c-label { font-size:10px; font-weight:500; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+        .c-val { font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:500; color:var(--blue); }
+        .c-val.dim { color:var(--border); }
+        /* Info */
+        .info-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+        .info-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:12px 10px; text-align:center; }
+        .i-label { font-size:9px; font-weight:500; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+        .i-val { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:500; color:var(--text); }
+        .i-val.dim { color:var(--border); }
+        /* Buttons */
+        .btn-row { display:flex; gap:10px; }
+        button { flex:1; padding:13px; font-family:'Inter',sans-serif; font-size:13px; font-weight:500; border:none; border-radius:10px; cursor:pointer; transition:all 0.2s; }
+        #startBtn { background:var(--blue); color:#fff; }
+        #startBtn:hover { background:#155da0; transform:translateY(-1px); }
+        #startBtn:disabled { background:var(--blue-lt); color:var(--blue-mid); border:1px solid var(--border); cursor:default; transform:none; }
+        #stopBtn { background:var(--surface); color:var(--red); border:1px solid var(--border); display:none; }
+        #stopBtn:hover { background:var(--red-lt); }
+        /* Log */
+        .log-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; max-height:200px; overflow-y:auto; }
+        .log-box::-webkit-scrollbar { width:3px; }
+        .log-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+        .log-head { font-size:10px; font-weight:500; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+        .log-row { font-size:11px; color:var(--muted); padding:5px 0; border-bottom:1px solid var(--bg); display:grid; grid-template-columns:58px 1fr 52px; gap:6px; align-items:center; }
+        .log-row:last-child { border-bottom:none; }
         .l-time { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--blue-mid); }
         .l-coord { font-family:'JetBrains Mono',monospace; font-size:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .l-status { font-size:10px; text-align:right; font-weight:500; }
-        .l-status.ok   { color: var(--green); }
-        .l-status.warn { color: var(--red); }
-        .footer { text-align: center; font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+        .l-status.ok   { color:var(--green); }
+        .l-status.warn { color:var(--red); }
+        .footer { text-align:center; font-size:10px; color:var(--muted); letter-spacing:0.5px; }
     </style>
 </head>
 <body>
 <div class="page">
 
     <div class="title">
-        <h1>Big Cedar Lake Surf Zone Geo Fence</h1>
-        <p>Live GPS · 406ft Shore Rule · BlueJ Connected</p>
+        <h1>Surf Zone Geo Fence</h1>
+        <p>Live GPS · 406ft Shore Rule · Server Connected</p>
     </div>
 
     <hr>
 
+    <!-- Lake selector -->
+    <div class="lake-row">
+        <div class="lake-label">Select Lake</div>
+        <select id="lakeSelect" onchange="onLakeChange()">
+            <option value="big_cedar">Big Cedar Lake</option>
+            <option value="lake_geneva">Lake Geneva</option>
+            <option value="lake_mendota">Lake Mendota</option>
+            <option value="elkhart_lake">Elkhart Lake</option>
+            <option value="lake_winnebago">Lake Winnebago</option>
+            <option value="diercks_hall">Diercks Hall (MSOE)</option>
+        </select>
+    </div>
+
+    <!-- Zone status -->
     <div class="zone-card" id="zoneCard">
         <div class="zone-label">Zone Status</div>
         <div class="zone-status" id="zoneStatus">Waiting...</div>
         <div class="zone-sub" id="zoneSub">Start tracking to check your zone</div>
     </div>
 
+    <!-- Server -->
     <div class="server-row">
         <div class="s-left">
             <div class="sdot off" id="sdot"></div>
             <div class="s-text">
-                <strong>BlueJ Server</strong>
-                <span id="stext">Not connected — run LocationServer.java first</span>
+                <strong>Server</strong>
+                <span id="stext">Not connected</span>
             </div>
         </div>
         <button class="s-btn" onclick="checkServer()">Check</button>
     </div>
 
+    <!-- GPS status -->
     <div class="gps-pill">
         <div class="gdot" id="gdot"></div>
         <span id="gtext">Waiting to start</span>
     </div>
 
+    <!-- Map -->
     <div id="map"></div>
 
+    <!-- Coordinates -->
     <div class="coord-grid">
         <div class="coord-card" id="latCard">
             <div class="c-label">Latitude</div>
@@ -130,6 +152,7 @@
         </div>
     </div>
 
+    <!-- Info -->
     <div class="info-row">
         <div class="info-card">
             <div class="i-label">Accuracy</div>
@@ -145,11 +168,13 @@
         </div>
     </div>
 
+    <!-- Buttons -->
     <div class="btn-row">
-        <button id="startBtn" onclick="startTracking()">▶ Start Tracking</button>
-        <button id="stopBtn"  onclick="stopTracking()">■ Stop</button>
+        <button id="startBtn" onclick="startTracking()">&#9654; Start Tracking</button>
+        <button id="stopBtn"  onclick="stopTracking()">&#9632; Stop</button>
     </div>
 
+    <!-- Log -->
     <div class="log-box">
         <div class="log-head">Send Log</div>
         <div id="logList">
@@ -161,63 +186,48 @@
         </div>
     </div>
 
-    <div class="footer">Sends to BlueJ on every GPS update · Port 8080</div>
+    <div class="footer">Sends to server on every GPS update · 406ft rule</div>
 
 </div>
 
 <script>
-    const SERVER  = 'https://cedar-lake-server--27mtorinus.replit.app';
-   const LAKE_ZONE = [
-    [43.388960, -88.272170],
-    [43.388555, -88.272355],
-    [43.387880, -88.272540],
-    [43.386665, -88.272725],
-    [43.385315, -88.272910],
-    [43.385045, -88.272910],
-    [43.384370, -88.272540],
-    [43.382750, -88.271615],
-    [43.381940, -88.271060],
-    [43.380995, -88.269950],
-    [43.379645, -88.268100],
-    [43.378565, -88.265695],
-    [43.378295, -88.264955],
-    [43.378160, -88.263660],
-    [43.378025, -88.262180],
-    [43.378025, -88.261440],
-    [43.382615, -88.254040],
-    [43.384910, -88.250895],
-    [43.386395, -88.249415],
-    [43.386800, -88.249045],
-    [43.387340, -88.248675],
-    [43.388420, -88.248120],
-    [43.389635, -88.247565],
-    [43.390445, -88.247380],
-    [43.391660, -88.247195],
-    [43.392740, -88.247195],
-    [43.394495, -88.247935],
-    [43.394900, -88.248120],
-    [43.395440, -88.248490],
-    [43.397465, -88.250340],
-    [43.399085, -88.252560],
-    [43.400435, -88.254595],
-    [43.401380, -88.256075],
-    [43.402190, -88.257370],
-    [43.402865, -88.258480],
-    [43.403135, -88.259035],
-    [43.403810, -88.261070],
-    [43.404080, -88.261995],
-    [43.403540, -88.262550],
-    [43.402730, -88.263290],
-    [43.401380, -88.264400],
-    [43.400435, -88.265140],
-    [43.399625, -88.265695],
-    [43.394090, -88.269395],
-    [43.393145, -88.269950],
-    [43.391120, -88.271060],
-    [43.388960, -88.272170]
-];
+    const SERVER = 'https://cedar-lake-server--27mtorinus.replit.app';
     let watchId   = null;
     let sentCount = 0;
+    let selectedLake = 'big_cedar';
+
+    // Lake center coords for map reset on lake change
+    const LAKE_CENTERS = {
+        big_cedar:      [43.3875, -88.2601],
+        lake_geneva:    [42.5950, -88.4100],
+        lake_mendota:   [43.1370, -89.4300],
+        elkhart_lake:   [43.8375, -87.9737],
+        lake_winnebago: [44.0400, -88.3700],
+        diercks_hall:   [43.04455, -87.90625]
+    };
+
+    const LAKE_NAMES = {
+        big_cedar:      'Big Cedar Lake',
+        lake_geneva:    'Lake Geneva',
+        lake_mendota:   'Lake Mendota',
+        elkhart_lake:   'Elkhart Lake',
+        lake_winnebago: 'Lake Winnebago',
+        diercks_hall:   'Diercks Hall (MSOE)'
+    };
+
+    function onLakeChange() {
+        selectedLake = document.getElementById('lakeSelect').value;
+        // Reset map to new lake center
+        if (map) {
+            const c = LAKE_CENTERS[selectedLake];
+            map.setView(c, 14);
+        }
+        // Reset zone card
+        const card = document.getElementById('zoneCard');
+        card.className = 'zone-card';
+        document.getElementById('zoneStatus').textContent = 'Waiting...';
+        document.getElementById('zoneSub').textContent = 'Start tracking to check your zone';
+    }
 
     // Audio - iOS safe
     let warningInterval = null;
@@ -273,12 +283,6 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
-            L.polygon(LAKE_ZONE, {
-    color: '#1a6fc4',
-    fillColor: '#4a9de0',
-    fillOpacity: 0.15,
-    weight: 2
-}).addTo(map);
             marker = L.circleMarker([lat, lon], {
                 radius: 10,
                 fillColor: '#1a6fc4',
@@ -292,6 +296,7 @@
         }
     }
 
+    // Server check
     async function checkServer() {
         document.getElementById('stext').textContent = 'Checking...';
         try {
@@ -302,12 +307,13 @@
             } else throw new Error();
         } catch {
             document.getElementById('sdot').className = 'sdot off';
-            document.getElementById('stext').textContent = 'Not found — run LocationServer.java first';
+            document.getElementById('stext').textContent = 'Not found — is server running?';
         }
     }
 
-    async function sendToBlueJ(lat, lon, acc, alt, ts) {
-        const payload = `${ts},${lat},${lon},${acc},${alt}`;
+    // Send location — includes lake name in payload
+    async function sendToServer(lat, lon, acc, alt, ts) {
+        const payload = `${ts},${lat},${lon},${acc},${alt},${selectedLake}`;
         try {
             const res = await fetch(SERVER + '/location', {
                 method: 'POST', mode: 'cors',
@@ -327,7 +333,7 @@
             }
         } catch {
             document.getElementById('sdot').className = 'sdot off';
-            document.getElementById('stext').textContent = 'Connection lost — is BlueJ running?';
+            document.getElementById('stext').textContent = 'Connection lost — is server running?';
         }
         return null;
     }
@@ -383,7 +389,7 @@
 
         initMap(parseFloat(lat), parseFloat(lon));
 
-        const result = await sendToBlueJ(lat, lon, acc, alt, ts);
+        const result = await sendToServer(lat, lon, acc, alt, ts);
         addLog(ts, lat, lon, result);
     }
 
@@ -428,7 +434,7 @@
         let statusHtml;
         if (result === true)       statusHtml = '<span class="l-status ok">✓ Good</span>';
         else if (result === false)  statusHtml = '<span class="l-status warn">✗ Bad</span>';
-        else                        statusHtml = '<span class="l-status">No BlueJ</span>';
+        else                        statusHtml = '<span class="l-status">No Server</span>';
         row.innerHTML = `
             <span class="l-time">${time}</span>
             <span class="l-coord">${lat}, ${lon}</span>
@@ -437,6 +443,15 @@
         logList.prepend(row);
         while (logList.children.length > 40) logList.removeChild(logList.lastChild);
     }
+
+    // Init map at Big Cedar on load
+    window.addEventListener('load', () => {
+        const c = LAKE_CENTERS['big_cedar'];
+        map = L.map('map').setView(c, 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+    });
 
     checkServer();
 </script>
