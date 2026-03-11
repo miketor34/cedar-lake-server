@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surf Zone Geo Fence</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Surf Zone">
+    <meta name="theme-color" content="#1a6fc4">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/96/surfing.png">
+    <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -93,6 +99,9 @@
 <div class="page">
 
     <div class="title">
+        <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);text-decoration:none;margin-bottom:12px;letter-spacing:0.3px;">
+            ← Back to Home
+        </a>
         <h1>Surf Zone Geo Fence</h1>
         <p>Live GPS · 406ft Shore Rule · Server Connected</p>
     </div>
@@ -474,6 +483,7 @@
     });
 
     checkServer();
-</script>
-</body>
-</html>
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
