@@ -167,6 +167,16 @@
 
 <script>
     const SERVER  = 'https://cedar-lake-server--27mtorinus.replit.app';
+    const LAKE_ZONE = [
+    [43.3999, -88.2676], [43.3978, -88.2710], [43.3950, -88.2735],
+    [43.3920, -88.2750], [43.3890, -88.2748], [43.3860, -88.2740],
+    [43.3830, -88.2725], [43.3805, -88.2700], [43.3790, -88.2670],
+    [43.3785, -88.2640], [43.3790, -88.2610], [43.3800, -88.2575],
+    [43.3820, -88.2548], [43.3850, -88.2535], [43.3880, -88.2530],
+    [43.3910, -88.2538], [43.3940, -88.2555], [43.3965, -88.2578],
+    [43.3982, -88.2608], [43.3992, -88.2638], [43.3999, -88.2658],
+    [43.3999, -88.2676]
+];
     let watchId   = null;
     let sentCount = 0;
 
@@ -224,6 +234,12 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap'
             }).addTo(map);
+            L.polygon(LAKE_ZONE, {
+    color: '#1a6fc4',
+    fillColor: '#4a9de0',
+    fillOpacity: 0.15,
+    weight: 2
+}).addTo(map);
             marker = L.circleMarker([lat, lon], {
                 radius: 10,
                 fillColor: '#1a6fc4',
